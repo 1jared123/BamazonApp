@@ -1,0 +1,23 @@
+{
+  "name": "bamazonapp",
+  "version": "1.0.0",
+  "description": "Amazon, but bamyer",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1jared123/BamazonApp.git"
+  },
+  "author": "Jared Moscrip",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/1jared123/BamazonApp/issues"
+  },
+  "homepage": "https://github.com/1jared123/BamazonApp#readme",
+  "dependencies": {
+    "inquirer": "^3.0.6",
+    "mysql": "^2.13.0"
+  }
+}
