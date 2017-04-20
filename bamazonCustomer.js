@@ -2,7 +2,7 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 
 var connection = mysql.createConnection({
-	host: "localhost", 
+	host: "localhost",
 	port: 3306,
 	user: "root",
 	password: "IronMan",
@@ -12,57 +12,88 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
 	if (err) {
 		console.log(err);
-	} 
-})
-
-var query = "SELECT * FROM products";
-
-connection.query(query, function(err, res) {
-  for (var i = 0; i < res.length; i++) {
-    console.log("Product ID: " + res[i].item_id + "\nName: " + res[i].product_name
-      + "\nDepartment: " + res[i].department_name + "\nPrice: $" + res[i].price + "\nQuantity: " + res[i].stock_quantity + "\n");
-  }
-  start();
+	}
 });
 
+var toChoose = [];
 
 var start = function() {
-  inquirer.prompt([
+	var query = "SELECT * FROM products";
 
-  	{
-    name: "postOrBid",
-    type: "rawlist",
-    message: "Choose your item by selecting the ID number",
-    choices: function() {
-    	var toChoose = [];
-    	var query = "SELECT * FROM products";
-    	connection.query(query, function(err, res) {
-		  for (var i = 0; i < res.length; i++) {
-		     toChoose.push(res[i].item_id)
-		  }
-		  return toChoose
-		});
-	  }
-    },
+	connection.query(query, function(err, res) {
+		if (err) {
+			console.log("there was an error");
+		} else {
+			for (var i = 0; i < res.length; i++) {
+				console.log(
+					"Product ID: " +
+						res[i].item_id +
+						"\nName: " +
+						res[i].product_name +
+						"\nDepartment: " +
+						res[i].department_name +
+						"\nPrice: $" +
+						res[i].price +
+						"\nQuantity: " +
+						res[i].stock_quantity +
+						"\n"
+				);
+				var array = [res[i].item_id, res[i].product_name, res[i].price];
+				toChoose.push(array);
+			}
+		}
 
-    {
-    	name:"quantity",
-    	type:"input",
-    	message: "How many would you like to buy?",
-    	default: 1
-    }
+		inquirer
+			.prompt([
+				{
+					name: "choice",
+					type: "input",
+					message: "What product would you like to buy? Pls input the Id number.",
+					default: 0
+				},
 
-  ]).then(function(answer) {
+				{
+					name: "quantity",
+					type: "input",
+					message: "How many would you like to buy?",
+					default: 1
+				}
+			])
+			.then(function(answer) {
+				if (answer.choice === 0) {
+					console.log("better luck next time then...");
+					connection.end();
+				} else {
+					connection.query("SELECT * from products WHERE item_id =" + answer.choice, function(err, res) {
+							if (err) {
+								console.log("ANOTHER ERROR!");
+							} else {
+								var haveIt = res[0].stock_quantity;
+								var requested = parseFloat(answer.quantity);
+								var price = res[0].price;
+								var numLeft = haveIt - requested
+								if (haveIt > requested) {
+									console.log("There is enough");
+									console.log("Ammount left: " + numLeft);
+									connection.query("UPDATE products SET ? WHERE ?", [{stock_quantity: numLeft}, {item_id: answer.item}] , function(err, res) {
+										console.log("Total = " +(requested * price).toFixed(2));
+										
 
-  		var query = "UPDATE ";
-
-		connection.query(query, function(err, res) {
-		  for (var i = 0; i < res.length; i++) {
-		    console.log("Product ID: " + res[i].item_id + "\n");
-		  }
-		});  
-  });
+									});
+									
+								} else {
+									console.log("Insufficient quantity!");
+									connection.end();
+								}
+							}
+						}
+					);
+				}
+			});
+	});
 };
+
+start();
 
 /*
 // function to handle posting new items up for auction
