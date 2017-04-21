@@ -1,6 +1,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 
+//Here we connect to the server
 var connection = mysql.createConnection({
 	host: "localhost",
 	port: 3306,
@@ -15,9 +16,10 @@ connection.connect(function(err) {
 	}
 });
 
-var toChoose = [];
-
+//function to run everything
 var start = function() {
+
+  //here we pull everything from the database and display the items. 
 	var query = "SELECT * FROM products";
 
 	connection.query(query, function(err, res) {
@@ -38,13 +40,10 @@ var start = function() {
 						res[i].stock_quantity +
 						"\n"
 				);
-				var array = [res[i].item_id, res[i].product_name, res[i].price];
-				toChoose.push(array);
 			}
 		}
-
-		inquirer
-			.prompt([
+    //now we ask what's the id of the item they'd like to buy, then ask how many.
+		inquirer.prompt([
 				{
 					name: "choice",
 					type: "input",
@@ -60,10 +59,13 @@ var start = function() {
 				}
 			])
 			.then(function(answer) {
+        //now we going to do something what they said. 
+        //if they didn't specify something then this shows.
 				if (answer.choice === 0) {
 					console.log("better luck next time then...");
 					connection.end();
 				} else {
+          //if they did choose something we run this and see if they're's enough of what they want. 
 					connection.query("SELECT * from products WHERE item_id =" + answer.choice, function(err, res) {
 							if (err) {
 								console.log("ANOTHER ERROR!");
@@ -73,10 +75,11 @@ var start = function() {
 								var price = res[0].price;
 								var numLeft = haveIt - requested
 								if (haveIt > requested) {
+                  //if we have enough then we tell them there is enough and show the total and ammount left after all that's over.
 									console.log("There is enough");
 									console.log("Ammount left: " + numLeft);
-									console.log("Total = " +(requested * price).toFixed(2));
-
+									console.log("Total = $" +(requested * price).toFixed(2));
+                  //then we update DB
 									connection.query("UPDATE products SET stock_quantity=? WHERE item_id=?", [numLeft, answer.choice] , function(err, res) {
 										console.log(res);
 
@@ -94,101 +97,5 @@ var start = function() {
 	});
 };
 
+//here we start the process of money making and extortion. 
 start();
-
-/*
-// function to handle posting new items up for auction
-var displayProducts = function() {
-  // prompt for info about the item being put up for auction
-  inquirer.prompt([{
-    name: "item",
-    type: "input",
-    message: "What is the item you would like to submit?"
-  }, {
-    name: "category",
-    type: "input",
-    message: "What category would you like to place your auction in?"
-  }, {
-    name: "startingBid",
-    type: "input",
-    message: "What would you like your starting bid to be?",
-    validate: function(value) {
-      if (isNaN(value) === false) {
-        return true;
-      }
-      return false;
-    }
-  }]).then(function(answer) {
-    // when finished prompting, insert a new item into the db with that info
-    connection.query("INSERT INTO auctions SET ?", {
-      item_name: answer.item,
-      category: answer.category,
-      starting_bid: answer.startingBid,
-      highest_bid: answer.startingBid
-    }, function(err) {
-      if (err) throw err;
-      console.log("Your auction was created successfully!");
-      // re-prompt the user for if they want to bid or post
-      start();
-    });
-  });
-};
-
-// function to get all items available for bidding, and allow you to place a bid
-var bidAuction = function() {
-  // query the database for all items being auctioned
-  connection.query("SELECT * FROM auctions", function(err, results) {
-    if (err) throw err;
-    // once you have the items, prompt the user for which they'd like to bid on
-    inquirer.prompt([
-      {
-        name: "choice",
-        type: "rawlist",
-        choices: function() {
-          var choiceArray = [];
-          for (var i = 0; i < results.length; i++) {
-            choiceArray.push(results[i].item_name);
-          }
-          return choiceArray;
-        },
-        message: "What auction would you like to place a bid in?"
-      },
-      {
-        name: "bid",
-        type: "input",
-        message: "How much would you like to bid?"
-      }
-    ]).then(function(answer) {
-      // get the information of the chosen item
-      var chosenItem;
-      for (var i = 0; i < results.length; i++) {
-        if (results[i].item_name === answer.choice) {
-          chosenItem = results[i];
-        }
-      }
-
-      // determine if bid was high enough
-      if (chosenItem.highest_bid < parseInt(answer.bid)) {
-        // bid was high enough, so update db, let the user know, and start over
-        connection.query("UPDATE auctions SET ? WHERE ?", [{
-          highest_bid: answer.bid
-        }, {
-          id: chosenItem.id
-        }], function(error) {
-          if (error) throw err;
-          console.log("Bid placed successfully!");
-          start();
-        });
-      }
-      else {
-        // bid wasn't high enough, so apologize and start over
-        console.log("Your bid was too low. Try again...");
-        start();
-      }
-    });
-  });
-};
-
-// run the start function when the file is loaded to prompt the user
-start();
-*/
