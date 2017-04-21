@@ -75,12 +75,13 @@ var start = function() {
 								if (haveIt > requested) {
 									console.log("There is enough");
 									console.log("Ammount left: " + numLeft);
-									connection.query("UPDATE products SET ? WHERE ?", [{stock_quantity: numLeft}, {item_id: answer.item}] , function(err, res) {
-										console.log("Total = " +(requested * price).toFixed(2));
-										
+									console.log("Total = " +(requested * price).toFixed(2));
+
+									connection.query("UPDATE products SET stock_quantity=? WHERE item_id=?", [numLeft, answer.choice] , function(err, res) {
+										console.log(res);
 
 									});
-									
+									connection.end();
 								} else {
 									console.log("Insufficient quantity!");
 									connection.end();
