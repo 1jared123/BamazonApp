@@ -66,7 +66,7 @@ var start = function() {
 					connection.end();
 				} else {
           //if they did choose something we run this and see if they're's enough of what they want. 
-					connection.query("SELECT * from products WHERE item_id =" + answer.choice, function(err, res) {
+					connection.query("SELECT * from products WHERE item_id =?", [answer.choice], function(err, res) {
 							if (err) {
 								console.log("ANOTHER ERROR!");
 							} else {
