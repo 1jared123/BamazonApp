@@ -81,7 +81,7 @@ var start = function() {
 									console.log("Total = $" +(requested * price).toFixed(2));
                   //then we update DB
 									connection.query("UPDATE products SET stock_quantity=? WHERE item_id=?", [numLeft, answer.choice] , function(err, res) {
-										console.log(res);
+										console.log("Updated!");
 
 									});
 									connection.end();
@@ -90,8 +90,7 @@ var start = function() {
 									connection.end();
 								}
 							}
-						}
-					);
+					});
 				}
 			});
 	});

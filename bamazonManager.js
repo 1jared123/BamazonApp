@@ -100,7 +100,7 @@ function lowInventory() {
 
 function addInventory() {
 	var query = "SELECT * FROM products";
-
+	//give them the options to choose from.
 	connection.query(query, function(err, res) {
 		if (err) {
 			console.log("there was an error");
@@ -121,7 +121,7 @@ function addInventory() {
 				);
 			}
 		}
-    //now we ask what's the id of the item they'd like to buy, then ask how many.
+    //now we ask what's the id of the item they'd like to add, then ask how many they are adding.
 		inquirer.prompt([
 				{
 					name: "choice",
@@ -133,33 +133,86 @@ function addInventory() {
 				{
 					name: "quantity",
 					type: "input",
-					message: "How many you adding? you like to buy?",
+					message: "Adding how many?",
 					default: 1
 				}
 			]).then(function(answer) {
-        //now we going to do something what they said. 
         //if they didn't specify something then this shows.
 				if (answer.choice === 0) {
 					console.log("Ok not this time...");
 					connection.end();
 				} else {
-          //if they did choose something we run this and see if they're's enough of what they want. 
-					connection.query("UPDATE products SET stock_quantity=? WHERE item_id =?," [answer.quantity, answer.choice], function(err, res) {
-							if (err) {
-								console.log("ANOTHER ERROR!");
-							} else {						
-								console.log("You added " +answer.quantity + "worth of products");
-								connection.end();								
-							}
-						}
-					);
+					connection.query("SELECT * from products WHERE item_id =?", [answer.choice], function(err, res) {
+						if (err) {
+							console.log("ANOTHER ERROR!");
+						} else {
+							var haveIt = res[0].stock_quantity;
+							var requested = parseFloat(answer.quantity);
+							var newTotal = haveIt + requested
+								connection.query("UPDATE products SET stock_quantity=? WHERE item_id =?", [newTotal, answer.choice], function(err, res) {
+									if (err) {
+										console.log("Stupid ERRORS!");
+									} else {						
+										console.log("You added " + newTotal + "worth of product");
+									}
+								});
+								connection.end();
+							}							
+					});
 				}
 			});
 	});
 };
 
 function newProduct() {
+	//input info for new product
+	inquirer.prompt([
+		{
+			name: "item",
+			type: "input",
+			message: "Name of Product.",
+			default: 0
+		},
 
+		{
+			name: "department",
+			type: "input",
+			message: "Department",
+			default: "Food"
+		},
+
+		{
+			name: "price",
+			type: "input",
+			message: "Cost of Product.",
+			default: 1
+		},
+
+		{
+			name: "stock",
+			type: "input",
+			message: "How many in stock?",
+			default: 10
+		}
+
+	]).then(function(answer) {
+		//if they didn't give us a name we won't go any further.
+		if (answer.item === 0) {
+			console.log("Ok not this time...");
+			connection.end();
+		} else {
+ 			 //here we adding the info
+			connection.query("INSERT INTO products (product_name, department_name, price, stock_quantity) VALUE (?, ?, ?, ?)", [answer.item, answer.department, answer.price, answer.stock], function(err, res) {
+					if (err) {
+						console.log("ANOTHER ERROR!");
+					} else {						
+						console.log("You added a new product!");
+						connection.end();								
+					}
+				}
+			);
+		}
+	});
 };
 
 
